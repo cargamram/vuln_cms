@@ -16,12 +16,13 @@ echo "*********************************"
 echo "     INSTALANDO PUPPET CLIENT    "
 echo "*********************************"
 sleep 2
-sudo apt-get install -y puppet-agent
+sudo apt-get install -y puppet-agent=8.6.0
 
 sudo tee /etc/puppetlabs/puppet/puppet.conf <<EOF
 [main]
 certname = nodo01
 server = server
+environment = development
 EOF
 
 echo "*********************************"
