@@ -1,18 +1,6 @@
 node 'nodo01.domain.local' {
-  class { 'drupal':
-    drupal_version => '8.2.0',
-    db_host        => 'localhost',
-    db_name        => 'drupaldb',
-    db_user        => 'drupaluser',
-    db_password    => 'drupalpass',
-    site_name      => 'My Drupal Site',
-    site_mail      => 'admin@example.com',
-    site_user      => 'admin',
-    site_pass      => 'adminpassword',
-    install_dir    => '/var/www/drupal',
-  }
 
-  drupal::site { 'example.com':
+  drupal::site { 'vulncms.com':
     core_version => '8.2.0',
     modules      => {
       'ctools'   => '1.4',
@@ -41,7 +29,6 @@ node 'nodo01.domain.local' {
   apache::vhost { 'drupal':
     port    => '80',
     docroot => '/var/www/drupal',
-    require => Class['drupal'],
   }
 
   class { 'mysql::server':
@@ -55,4 +42,5 @@ node 'nodo01.domain.local' {
     grant    => ['ALL'],
     require  => Class['mysql::server'],
   }
+
 }
