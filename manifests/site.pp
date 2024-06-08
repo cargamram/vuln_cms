@@ -1,4 +1,4 @@
-node 'nodo01' {
+node 'nodo01.domain.local' {
   class { 'drupal':
     drupal_version => '8.2.0',
     db_host        => 'localhost',

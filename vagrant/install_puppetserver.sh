@@ -1,7 +1,12 @@
 #!/bin/bash
 
+echo "**************************************************************************************************"
+echo "                                  INSTALANDO PUPPETSERVER                                         "
+echo "**************************************************************************************************"
+
 sudo apt-get update
 sudo apt-get install -y wget lsb-release apt-transport-https
+sudo apt-get install git -y
 
 echo "*********************************"
 echo "    DESCARGANDO PUPPET SERVER    "
@@ -17,7 +22,7 @@ echo "*********************************"
 echo "     INSTALANDO PUPPET SERVER    "
 echo "*********************************"
 sleep 2
-sudo apt-get install -y puppetserver=8.6.0
+sudo apt-get install -y puppetserver
 
 sudo sed -i 's/-Xms2g/-Xms512m/' /etc/default/puppetserver
 sudo sed -i 's/-Xmx2g/-Xmx512m/' /etc/default/puppetserver
@@ -38,6 +43,8 @@ sleep 2
 sudo apt-get install rubygems -y
 sudo gem install r10k
 
+echo "Configuration /etc/puppetlabs/r10k/r10k.yaml"
+sudo mkdir -p /etc/puppetlabs/r10k/
 sudo touch /etc/puppetlabs/r10k/r10k.yaml 
 sudo tee /etc/puppetlabs/r10k/r10k.yaml <<EOF
 :cachedir: '/var/cache/r10k'
@@ -48,21 +55,32 @@ sudo tee /etc/puppetlabs/r10k/r10k.yaml <<EOF
     prefix: false
 EOF
 
+echo "Configuration /etc/puppetlabs/puppet/puppet.conf" 
 sudo tee /etc/puppetlabs/puppet/puppet.conf <<EOF
-[main]
-environmentpath = $codedir/environments
-basemodulepath = $codedir/modules
-
 [master]
-default_environment = production
+dns_alt_names = server.domain.local,server
+
+[main]
+certname = server.domain.local
+server = server.domain.local
+environment = develop
 EOF
+# sudo tee /etc/puppetlabs/puppet/puppet.conf <<EOF
+# [main]
+# environmentpath = /etc/puppetlabs/code/environments
+# basemodulepath = /etc/puppetlabs/code/modules
 
-# echo "*********************************"
-# echo "        DESPLEGANDO MODULOS      "
-# echo "*********************************"
-# sleep 2
-# sudo r10k deploy environment -p
+# [master]
+# default_environment = develop
+# EOF
 
 echo "*********************************"
-echo "     PUPPETSERVER INSTALADO      "
+echo "        DESPLEGANDO MODULOS      "
 echo "*********************************"
+sleep 2
+sudo r10k deploy environment -p
+echo "Modulos desplegados..."
+
+echo "**************************************************************************************************"
+echo "                                  PUPPETSERVER INSTALADO                                          "
+echo "**************************************************************************************************"
