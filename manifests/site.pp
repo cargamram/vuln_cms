@@ -27,8 +27,10 @@ node 'nodo01.domain.local' {
   }
 
   apache::vhost { 'drupal':
-    port    => '80',
+    port    => 80,
     docroot => '/var/www/drupal',
+    docroot_owner => 'www-data',
+    docroot_group => 'www-data',
   }
 
   class { 'mysql::server':
