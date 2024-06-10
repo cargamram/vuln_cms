@@ -4,8 +4,13 @@ node 'nodo01.domain.local' {
     core_version => '8.2.0',
   }
 
-  class { 'apache':
-    default_vhost => false,
+  class { 'apache': 
+   default_vhost => false, 
+   mpm_module => 'prefork', 
+  } 
+
+  class { 'apache::mod::php': 
+    php_version => '7.0', 
   }
 
   apache::vhost { 'vulncms.com':
