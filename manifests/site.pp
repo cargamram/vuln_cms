@@ -6,7 +6,7 @@ node 'nodo01.domain.local' {
   } 
 
   class { 'apache::mod::php': 
-    php_version => '7.0', 
+    php_version => '7.4', 
   }
 
   class { 'mysql::server':
@@ -15,6 +15,7 @@ node 'nodo01.domain.local' {
 
   apache::vhost { 'vulncms.com':
     port    => 80,
+    servername => 'vulncms.com',
     docroot => '/var/www/drupal',
     docroot_owner => 'www-data',
     docroot_group => 'www-data',
@@ -26,6 +27,10 @@ node 'nodo01.domain.local' {
     host     => 'localhost',
     grant    => ['ALL'],
     require  => Class['mysql::server'],
+  }
+
+  drupal::site { 'vulncms.com':
+    core_version => '7.32',
   }
 
 }

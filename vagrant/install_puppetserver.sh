@@ -24,8 +24,8 @@ echo "*********************************"
 sleep 2
 sudo apt-get install -y puppetserver
 
-sudo sed -i 's/-Xms2g/-Xms512m/' /etc/default/puppetserver
-sudo sed -i 's/-Xmx2g/-Xmx512m/' /etc/default/puppetserver
+sudo sed -i 's/-Xms2g/-Xms1024m/' /etc/default/puppetserver
+sudo sed -i 's/-Xmx2g/-Xmx1024m/' /etc/default/puppetserver
 
 echo "*********************************"
 echo "     ARRANCANDO PUPPET SERVER    "
