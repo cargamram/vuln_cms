@@ -5,7 +5,7 @@ echo "                                  INSTALANDO PUPPETCLIENT                 
 echo "**************************************************************************************************"
 
 sudo apt-get update
-sudo apt-get install -y wget lsb-release apt-transport-https
+sudo apt-get install -y wget lsb-release apt-transport-https php-xml
 
 echo "*********************************"
 echo "    DESCARGANDO PUPPET CLIENT    "
