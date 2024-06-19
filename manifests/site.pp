@@ -13,9 +13,8 @@ node 'nodo01.domain.local' {
     root_password => 'rootpassword',
   }
 
-  apache::vhost { '200-vulncms.com':
+  apache::vhost { 'vulncms.com':
     port    => 80,
-    servername => 'vulncms.com',
     docroot => '/var/www/vulncms',
     docroot_owner => 'www-data',
     docroot_group => 'www-data',
@@ -29,6 +28,13 @@ node 'nodo01.domain.local' {
     require  => Class['mysql::server'],
   }
 
+  exec { 'remove_existing_directory_vulncms':
+    command => 'rm -rf /var/www/vulncms',
+    onlyif  => 'test -d /var/www/vulncms',
+    path    => ['/bin', '/usr/bin'],
+    require => Class['apache'],
+  }
+
   drupal::site { 'drupal':
     core_version => '7.32',
   }
@@ -37,6 +43,6 @@ node 'nodo01.domain.local' {
     ensure => 'link',
     target => '/var/www/drupal/',
     require => Drupal::Site['drupal'],
-  }
+  }  
 
 }
