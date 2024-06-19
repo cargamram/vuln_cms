@@ -33,9 +33,9 @@ node 'nodo01.domain.local' {
     core_version => '7.32',
   }
 
-  exec { 'create_symlink_drupal':
-    command => 'ln -s /var/www/drupal/ /var/www/vulncms',
-    path    => ['/bin', '/usr/bin'],
+  file { '/var/www/vulncms':
+    ensure => 'link',
+    target => '/var/www/drupal/',
     require => Drupal::Site['drupal'],
   }
 
