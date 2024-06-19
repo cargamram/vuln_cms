@@ -13,10 +13,10 @@ node 'nodo01.domain.local' {
     root_password => 'rootpassword',
   }
 
-  apache::vhost { 'vulncms.com':
+  apache::vhost { '200-vulncms.com':
     port    => 80,
     servername => 'vulncms.com',
-    docroot => '/var/www/drupal',
+    docroot => '/var/www/vulncms',
     docroot_owner => 'www-data',
     docroot_group => 'www-data',
   }
@@ -29,8 +29,14 @@ node 'nodo01.domain.local' {
     require  => Class['mysql::server'],
   }
 
-  drupal::site { 'vulncms.com':
+  drupal::site { 'drupal':
     core_version => '7.32',
+  }
+
+  exec { 'create_symlink_drupal':
+    command => 'ln -s /var/www/drupal/ /var/www/vulncms',
+    path    => ['/bin', '/usr/bin'],
+    require => Drupal::Site['drupal'],
   }
 
 }
