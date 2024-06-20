@@ -35,10 +35,14 @@ node 'nodo01.domain.local' {
     require => Class['apache'],
   }
 
-  file { '/etc/php/7.4/apache2/php.ini':
-    ensure  => present,
+  concat { '/etc/php/7.4/apache2/php.ini':
+    ensure => present,
+  }
+
+  concat::fragment { 'add_php_settings':
+    target  => '/etc/php/7.4/apache2/php.ini',
     content => "mbstring.func_overload = 0\nmbstring.internal_encoding = UTF-8\nmbstring.http_input = pass\nmbstring.http_output = pass\n",
-    require => Class['apache'],
+    order   => '99',
   }
 
   drupal::site { 'drupal':
@@ -55,6 +59,7 @@ node 'nodo01.domain.local' {
   exec { 'drush_site_install':
     command => '/usr/local/bin/drush site-install standard --account-name=admin --account-pass=adminpassword --db-url=mysql://drupaluser:drupalpass@localhost/drupaldb --site-name="Vulncms Site" -y',
     cwd     => '/var/www/vulncms',
+    logoutput => true,
     path    => ['/bin', '/usr/bin', '/usr/local/bin'],
     require => [Drupal::Site['drupal'], File['/var/www/vulncms']],
   }
