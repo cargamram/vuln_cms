@@ -1,5 +1,12 @@
 node 'nodo01.domain.local' {
 
+  $vulncms_path = '/var/www/vulncms'
+  $mysql_root_pass = 'rootpassword'
+  $drupal_db = 'drupaldb'
+  $drupal_user = 'drupaluser'
+  $drupal_pass = 'drupalpass'
+  $php_ini_path = '/etc/php/7.4/apache2/php.ini'
+
   class { 'apache': 
    default_vhost => false, 
    mpm_module => 'prefork', 
@@ -10,58 +17,47 @@ node 'nodo01.domain.local' {
   }
 
   class { 'mysql::server':
-    root_password => 'rootpassword',
+    root_password => $mysql_root_pass,
   }
 
   apache::vhost { 'vulncms.com':
     port    => 80,
-    docroot => '/var/www/vulncms',
+    docroot => $vulncms_path,
     docroot_owner => 'www-data',
     docroot_group => 'www-data',
   }
 
-  mysql::db { 'drupaldb':
-    user     => 'drupaluser',
-    password => 'drupalpass',
+  mysql::db { $drupal_db:
+    user     => $drupal_user,
+    password => $drupal_pass,
     host     => 'localhost',
     grant    => ['ALL'],
     require  => Class['mysql::server'],
   }
 
   exec { 'remove_existing_directory_vulncms':
-    command => 'rm -rf /var/www/vulncms',
-    onlyif  => 'test -d /var/www/vulncms',
+    command => 'rm -rf ${vulncms_path}',
+    onlyif  => 'test -d ${vulncms_path}',
     path    => ['/bin', '/usr/bin'],
     require => Class['apache'],
   }
 
-  concat { '/etc/php/7.4/apache2/php.ini':
-    ensure => present,
-  }
-
-  concat::fragment { 'add_php_settings':
-    target  => '/etc/php/7.4/apache2/php.ini',
-    content => "mbstring.func_overload = 0\nmbstring.internal_encoding = UTF-8\nmbstring.http_input = pass\nmbstring.http_output = pass\n",
-    order   => '99',
-  }
-
   drupal::site { 'drupal':
     core_version => '7.32',
-    require => File['/etc/php/7.4/apache2/php.ini']
   }
 
-  file { '/var/www/vulncms':
+  file { $vulncms_path:
     ensure => 'link',
     target => '/var/www/drupal/',
     require => [Drupal::Site['drupal'], Exec['remove_existing_directory_vulncms']],
   }  
 
   exec { 'drush_site_install':
-    command => '/usr/local/bin/drush site-install standard --account-name=admin --account-pass=adminpassword --db-url=mysql://drupaluser:drupalpass@localhost/drupaldb --site-name="Vulncms Site" -y',
-    cwd     => '/var/www/vulncms',
+    command => '/usr/local/bin/drush site-install standard --account-name=admin --account-pass=adminpassword --db-url=mysql://${drupal_user}:${drupal_pass}@localhost/${drupal_db} --site-name="Vulncms Site" -y',
+    cwd     => $vulncms_path,
     logoutput => true,
     path    => ['/bin', '/usr/bin', '/usr/local/bin'],
-    require => [Drupal::Site['drupal'], File['/var/www/vulncms']],
+    require => [Drupal::Site['drupal'], File['${vulncms_path}']],
   }
 
 }
