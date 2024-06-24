@@ -7,6 +7,13 @@ node 'nodo01.domain.local' {
   $drupal_pass = 'drupalpass'
   $php_ini_path = '/etc/php/7.4/apache2/php.ini'
 
+  notice('Ruta vulncms: ${vulncms_path}')
+  notice('MySQL Root Password: ${mysql_root_pass}')
+  notice('Drupal DB: ${drupal_db}')
+  notice('Drupal User: ${drupal_user}')
+  notice('Drupal Password: ${drupal_pass}')
+  notice('PHP ini Path: ${php_ini_path}')
+
   class { 'apache': 
    default_vhost => false, 
    mpm_module => 'prefork', 
@@ -57,7 +64,7 @@ node 'nodo01.domain.local' {
     cwd     => $vulncms_path,
     logoutput => true,
     path    => ['/bin', '/usr/bin', '/usr/local/bin'],
-    require => [Drupal::Site['drupal'], File['${vulncms_path}']],
+    require => [Drupal::Site['drupal'], File[$vulncms_path]],
   }
 
 }
