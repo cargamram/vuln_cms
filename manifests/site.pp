@@ -5,7 +5,7 @@ node 'nodo01.domain.local' {
   $drupal_db = 'drupaldb'
   $drupal_user = 'drupaluser'
   $drupal_pass = 'drupalpass'
-  $php_ini_path = '/etc/php/7.4/apache2/php.ini'
+  $php_ini_path = '/etc/php/5.6/cli/php.ini'
 
   notice('Ruta vulncms: ${vulncms_path}')
   notice('MySQL Root Password: ${mysql_root_pass}')
@@ -20,7 +20,7 @@ node 'nodo01.domain.local' {
   } 
 
   class { 'apache::mod::php': 
-    php_version => '7.4', 
+    php_version => '5.6', 
   }
 
   class { 'mysql::server':
@@ -49,8 +49,19 @@ node 'nodo01.domain.local' {
     require => Class['apache'],
   }
 
+  concat { $php_ini_path:
+    ensure => present,
+  }
+
+  concat::fragment { 'add_php_settings':
+    target  => $php_ini_path,
+    content => "mbstring.http_input = pass\nmbstring.http_output = pass\n",
+    order   => '99',
+  }
+
   drupal::site { 'drupal':
     core_version => '7.32',
+    require => Concat[$php_ini_path]
   }
 
   file { $vulncms_path:
