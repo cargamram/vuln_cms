@@ -16,34 +16,60 @@ node 'nodo01.domain.local' {
 
   include apt
 
-  apt::source { 'ondrej-php':
-    location => 'ppa:ondrej/php',
-    repos    => 'main',
-    release  => $::lsbdistcodename,
-    include  => {
-      'deb' => true,
-      'src' => true,
+  apt::source { 'sury-php':
+    location    => 'https://packages.sury.org/php/',
+    repos       => 'main',
+    release     => $::lsbdistcodename,
+    key         => {
+      'id'     => '89DF5277',
+      'source' => 'https://packages.sury.org/php/apt.gpg',
+    },
+    include     => {
+      'deb'    => true,
+      'src'    => true,
     },
   }
 
   exec { 'apt_update':
     command     => '/usr/bin/apt-get update',
     refreshonly => true,
-    subscribe   => Apt::Source['ondrej-php'],
+    subscribe   => Apt::Source['sury-php'],
   }
 
-  package { ['php5.6', 'php5.6-cli', 'php5.6-common', 'php5.6-mbstring', 'php5.6-mysql']:
+  package { ['php5.6', 'php5.6-cli', 'php5.6-common', 'php5.6-mbstring', 'php5.6-mysql', 'php5.6-fpm']:
     ensure  => installed,
     require => Exec['apt_update'],
   }
 
-  class { 'apache': 
-   default_vhost => false, 
-   mpm_module => 'prefork', 
-  } 
+  package { 'apache2':
+    ensure  => installed,
+    require => Exec['apt_update'],
+  }
 
-  class { 'apache::mod::php': 
-    php_version => '5.6', 
+  class { 'apache':
+    mpm_module => 'event',
+  }
+
+  class { 'apache::mod::proxy_fcgi': }
+
+  service { 'apache2':
+    ensure  => running,
+    enable  => true,
+    require => Package['apache2'],
+  }
+
+  file { '/etc/apache2/sites-available/000-default.conf':
+    ensure  => file,
+    content => template('/etc/template/apache/000-default.conf.erb'),
+    require => Package['php5.6-fpm'],
+    notify  => Service['apache2'],
+  }
+
+  exec { 'enable_php5.6_fpm':
+    command => 'a2enconf php5.6-fpm && systemctl reload apache2',
+    path    => '/usr/bin:/usr/sbin:/bin:/sbin',
+    unless  => 'test -L /etc/apache2/conf-enabled/php5.6-fpm.conf',
+    require => Package['php5.6-fpm'],
   }
 
   class { 'mysql::server':
