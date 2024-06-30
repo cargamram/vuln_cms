@@ -5,7 +5,7 @@ node 'nodo01.domain.local' {
   $drupal_db = 'drupaldb'
   $drupal_user = 'drupaluser'
   $drupal_pass = 'drupalpass'
-  $php_ini_path = '/etc/php/5.6/cli/php.ini'
+  $php_ini_path = '/etc/php/7.0/cli/php.ini'
 
   notice('Ruta vulncms: ${vulncms_path}')
   notice('MySQL Root Password: ${mysql_root_pass}')
@@ -13,6 +13,29 @@ node 'nodo01.domain.local' {
   notice('Drupal User: ${drupal_user}')
   notice('Drupal Password: ${drupal_pass}')
   notice('PHP ini Path: ${php_ini_path}')
+
+  include apt
+
+  apt::source { 'ondrej-php':
+    location => 'ppa:ondrej/php',
+    repos    => 'main',
+    release  => $::lsbdistcodename,
+    include  => {
+      'deb' => true,
+      'src' => true,
+    },
+  }
+
+  exec { 'apt_update':
+    command     => '/usr/bin/apt-get update',
+    refreshonly => true,
+    subscribe   => Apt::Source['ondrej-php'],
+  }
+
+  package { ['php5.6', 'php5.6-cli', 'php5.6-common', 'php5.6-mbstring', 'php5.6-mysql']:
+    ensure  => installed,
+    require => Exec['apt_update'],
+  }
 
   class { 'apache': 
    default_vhost => false, 
@@ -49,19 +72,9 @@ node 'nodo01.domain.local' {
     require => Class['apache'],
   }
 
-  concat { $php_ini_path:
-    ensure => present,
-  }
-
-  concat::fragment { 'add_php_settings':
-    target  => $php_ini_path,
-    content => "mbstring.http_input = pass\nmbstring.http_output = pass\n",
-    order   => '99',
-  }
-
   drupal::site { 'drupal':
     core_version => '7.32',
-    require => Concat[$php_ini_path]
+    require => [Package['php5.6'], Class['apache']]
   }
 
   file { $vulncms_path:
