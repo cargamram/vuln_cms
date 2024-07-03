@@ -5,7 +5,7 @@ node 'nodo01.domain.local' {
   $drupal_db = 'drupaldb'
   $drupal_user = 'drupaluser'
   $drupal_pass = 'drupalpass'
-  $php_ini_path = '/etc/php/7.0/cli/php.ini'
+  $php_ini_path = '/etc/php/5.6/cli/php.ini'
 
   notice('Ruta vulncms: ${vulncms_path}')
   notice('MySQL Root Password: ${mysql_root_pass}')
@@ -32,14 +32,9 @@ node 'nodo01.domain.local' {
     },
   }
 
-  package { 'libapache2-mod-php5.6':
+  package { ['php5.6', 'libapache2-mod-php5.6']:
     ensure  => installed,
     require => Apt::Source['sury-php'],
-  }
-
-  package { 'apache2':
-    ensure  => installed,
-    require => Exec['apt_update'],
   }
 
   class { 'apache': 
@@ -79,7 +74,7 @@ node 'nodo01.domain.local' {
 
   drupal::site { 'drupal':
     core_version => '7.32',
-    require => [Package['php5.6'], Class['apache']]
+    require => [Package['php5.6'], Class['apache']],
   }
 
   file { $vulncms_path:
