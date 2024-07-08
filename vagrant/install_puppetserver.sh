@@ -42,6 +42,7 @@ echo "*********************************"
 sleep 2
 sudo apt-get install rubygems -y
 sudo gem install r10k
+sudo gem install r10k-resolve
 
 echo "Configuration /etc/puppetlabs/r10k/r10k.yaml"
 sudo mkdir -p /etc/puppetlabs/r10k/
@@ -65,20 +66,25 @@ certname = server.domain.local
 server = server.domain.local
 environment = develop
 EOF
-# sudo tee /etc/puppetlabs/puppet/puppet.conf <<EOF
-# [main]
-# environmentpath = /etc/puppetlabs/code/environments
-# basemodulepath = /etc/puppetlabs/code/modules
 
-# [master]
-# default_environment = develop
-# EOF
+
+echo "*********************************"
+echo "          INSTALANDO g10k        "
+echo "*********************************"
+wget https://github.com/xorpaul/g10k/releases/download/v0.9.9/g10k-linux-amd64.zip
+sudo unzip g10k-linux-amd64.zip
+sudo mv g10k /usr/local/bin/
+
 
 echo "*********************************"
 echo "        DESPLEGANDO MODULOS      "
 echo "*********************************"
 sleep 2
 sudo r10k deploy environment -p
+sudo mkdir /etc/puppetlabs/code/environments/production
+cd /etc/puppetlabs/code/environments/develop
+sudo r10k-resolve --force
+sudo g10k -moduledir modules -puppetfile -puppetfilelocation Puppetfile -force
 echo "Modulos desplegados..."
 
 echo "**************************************************************************************************"

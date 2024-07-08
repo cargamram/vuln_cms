@@ -1,0 +1,6 @@
+forge 'https://forge.puppet.com'
+
+# Módulos necesarios
+mod 'puppetlabs-apt', '7.7.1'
+mod 'puppetlabs-apache', '12.1.0'
+mod 'puppetlabs-mysql', '13.3.0'

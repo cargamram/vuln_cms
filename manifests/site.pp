@@ -1,18 +1,11 @@
 node 'nodo01.domain.local' {
 
-  $vulncms_path = '/var/www/vulncms'
+  $vulncms_path = '/opt/vulncms/web'
   $mysql_root_pass = 'rootpassword'
   $drupal_db = 'drupaldb'
   $drupal_user = 'drupaluser'
   $drupal_pass = 'drupalpass'
   $php_ini_path = '/etc/php/5.6/cli/php.ini'
-
-  notice('Ruta vulncms: ${vulncms_path}')
-  notice('MySQL Root Password: ${mysql_root_pass}')
-  notice('Drupal DB: ${drupal_db}')
-  notice('Drupal User: ${drupal_user}')
-  notice('Drupal Password: ${drupal_pass}')
-  notice('PHP ini Path: ${php_ini_path}')
 
   include apt
 
@@ -30,11 +23,6 @@ node 'nodo01.domain.local' {
         'src' => false,
         'deb' => true,
     },
-  }
-
-  package { ['php5.6', 'libapache2-mod-php5.6']:
-    ensure  => installed,
-    require => Apt::Source['sury-php'],
   }
 
   class { 'apache': 
@@ -65,30 +53,45 @@ node 'nodo01.domain.local' {
     require  => Class['mysql::server'],
   }
 
-  exec { 'remove_existing_directory_vulncms':
-    command => 'rm -rf ${vulncms_path}',
-    onlyif  => 'test -d ${vulncms_path}',
-    path    => ['/bin', '/usr/bin'],
-    require => Class['apache'],
-  }
-
-  drupal::site { 'drupal':
-    core_version => '7.32',
-    require => [Package['php5.6'], Class['apache']],
+  package { ['php5.6', 'php5.6-gd', 'php5.6-curl', 'php5.6-xml', 'php5.6-zip', 'php5.6-mysqli', 'unzip', 'gnupg2']:
+    ensure  => installed,
+    require => Apt::Source['sury-php'],
+  }->
+  exec{ 'composer_copy': 
+    command      => 'php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"',
+  }->
+  exec{ 'composer_setup': 
+    command      => 'php composer-setup.php --2.2  --install-dir=/usr/local/bin --filename=composer',
+  }->
+  exec{ 'composer_unlink': 
+    command      => 'php -r "unlink('composer-setup.php');"',
+  }->
+  exec{ 'composer_create_project': 
+    command      => 'composer create-project drupal-composer/drupal-project:7.x-dev /opt/vulncms --no-interaction',
   }
 
   file { $vulncms_path:
     ensure => 'link',
-    target => '/var/www/drupal/',
-    require => [Drupal::Site['drupal'], Exec['remove_existing_directory_vulncms']],
+    target => '/opt/vulncms',
+    require => Exec['composer_create_project'],
   }  
 
-  exec { 'drush_site_install':
-    command => '/usr/local/bin/drush site-install standard --account-name=admin --account-pass=adminpassword --db-url=mysql://${drupal_user}:${drupal_pass}@localhost/${drupal_db} --site-name="Vulncms Site" -y',
-    cwd     => $vulncms_path,
-    logoutput => true,
-    path    => ['/bin', '/usr/bin', '/usr/local/bin'],
-    require => [Drupal::Site['drupal'], File[$vulncms_path]],
+  exec{ 'mysql_repo': 
+    command      => 'echo "deb http://repo.mysql.com/apt/debian/ bullseye mysql-8.0" > /etc/apt/sources.list.d/mysql.list',
+  }->
+  exec{ 'mysql_apt_key': 
+    command      => 'apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A8D3785C',
+  }->
+  exec{ 'apt_get_update': 
+    command      => 'apt-get update',
+  }->
+  exec{ 'install_mysql_client': 
+    command      => 'apt-get install mysql-client',
+  }
+
+  exec{ 'install_mysql_client': 
+    command      => '/opt/vulncms/vendor/bin/drush site-install  --root=/opt/vulncms/web --account-pass=adminpassword --db-url=mysql://${drupal_user}:${drupal_pass}@localhost/${drupal_db} --yes',
+    require => [Exec['composer_create_project'], Exec['install_mysql_client']],
   }
 
 }
