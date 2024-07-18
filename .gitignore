@@ -1,2 +1,3 @@
 # Ignore vagrant configuration
 .vagrant
+/site.pp_new
