@@ -43,6 +43,14 @@ node 'nodo01.domain.local' {
     docroot => $vulncms_path,
     docroot_owner => 'www-data',
     docroot_group => 'www-data',
+    directories => [
+    {
+      path => $vulncms_path,
+      options => ['Indexes', 'FollowSymLinks', 'MultiViews'],
+      allow_override => ['All'],
+      require => ['all granted'],
+    }
+  ],
   }
 
   mysql::db { $drupal_db:
@@ -55,9 +63,8 @@ node 'nodo01.domain.local' {
 
   package { ['php5.6', 'php5.6-gd', 'php5.6-curl', 'php5.6-xml', 'php5.6-zip', 'php5.6-mysqli', 'libapache2-mod-php5.6', 'unzip', 'gnupg2']:
     ensure  => installed,
-    require => Apt::Source['sury-php'],
-  }
-
+    require => [Class['apache'], Apt::Source['sury-php']],
+  }->
   exec{ 'composer_download': 
     command      => 'wget -O /usr/local/bin/composer https://getcomposer.org/download/2.2.24/composer.phar',
   }->
@@ -66,15 +73,18 @@ node 'nodo01.domain.local' {
   }->
   exec{ 'composer_create_project': 
     environment   => ['COMPOSER_HOME=/tmp'],
-    command       => 'composer create-project drupal-composer/drupal-project:7.x-dev /opt/vulncms --no-interaction',
+    command       => 'composer create-project drupal-composer/drupal-project:7.x-dev /var/www/drupal --no-interaction',
     onlyif        => 'test ! -d /opt/vulncms',
+  }->
+  exec{ 'install_drupal': 
+    command      => "/var/www/drupal/vendor/bin/drush site-install  --root=/var/www/drupal/web --account-pass=adminpassword --db-url=mysql://${drupal_user}:${drupal_pass}@localhost/${drupal_db} --yes",
   }->
   file { $vulncms_path:
     ensure => 'link',
-    target => '/opt/vulncms/web',
+    target => '/var/www/drupal/web',
   }->
-  exec{ 'install_drupal': 
-    command      => "/opt/vulncms/vendor/bin/drush site-install  --root=/opt/vulncms/web --account-pass=adminpassword --db-url=mysql://${drupal_user}:${drupal_pass}@localhost/${drupal_db} --yes",
+  exec{ 'enable_rewrite': 
+    command      => 'a2enmod rewrite && systemctl restart apache2',
   }
 
 }
