@@ -1,5 +1,5 @@
 Exec {
-  path => ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin'],
+  path => ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/var/www/drupal/vendor/bin'],
 }
 
 node 'nodo01.domain.local' {
@@ -74,17 +74,34 @@ node 'nodo01.domain.local' {
   exec{ 'composer_create_project': 
     environment   => ['COMPOSER_HOME=/tmp'],
     command       => 'composer create-project drupal-composer/drupal-project:7.x-dev /var/www/drupal --no-interaction',
-    onlyif        => 'test ! -d /opt/vulncms',
+    onlyif        => 'test ! -d /var/www/drupal',
   }->
   exec{ 'install_drupal': 
-    command      => "/var/www/drupal/vendor/bin/drush site-install  --root=/var/www/drupal/web --account-pass=adminpassword --db-url=mysql://${drupal_user}:${drupal_pass}@localhost/${drupal_db} --yes",
+    command      => "drush site-install  --root=/var/www/drupal/web --account-pass=adminpassword --db-url=mysql://${drupal_user}:${drupal_pass}@localhost/${drupal_db} --yes",
   }->
   file { $vulncms_path:
     ensure => 'link',
     target => '/var/www/drupal/web',
   }->
   exec{ 'enable_rewrite': 
-    command      => 'a2enmod rewrite && systemctl restart apache2',
+    command      => 'a2enmod php5.6 && a2enmod rewrite && systemctl restart apache2',
+  }->
+  exec{ 'mkdir_module_custom':
+    command      => 'mkdir /var/www/drupal/web/sites/all/modules/custom',
+  }->
+  exec{ 'module_vulnerable_download':
+    command      => 'wget -O /tmp/vulnerable7.zip https://github.com/greggles/vulnerable/archive/7.x-1.x.zip',
+  }->
+  exec{ 'install_vulnerable_download':
+    command      => 'unzip /tmp/vulnerable7.zip -d /var/www/drupal/web/sites/all/modules/custom',
+  }->
+  exec { 'import_drupal_db':
+    command => "mysql -u ${drupal_user} -p${drupal_pass} -h localhost ${drupal_db} < /vagrant_shared/drupal-dump.sql",
+    path    => ['/usr/bin', '/usr/local/bin'],
+    user    => 'root',
+  }->
+  exec{ 'drush_clear_cache':
+    command      => 'drush cc all'
   }
 
 }
