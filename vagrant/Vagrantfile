@@ -2,7 +2,8 @@ Vagrant.configure("2") do |config|
 
     config.vm.box = "debian/bullseye64"
 
-    config.vm.synced_folder "C:/Users/carlo/Desktop/CGR/GIT/TFM/vuln_cms", "/vagrant_shared", create: true
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.synced_folder File.expand_path("../synced_folder", __FILE__), "/vagrant_shared", create: true
 
     config.vm.define "server" do |server|
         server.vm.hostname = "server.domain.local"
