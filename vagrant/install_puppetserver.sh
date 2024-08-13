@@ -64,7 +64,7 @@ dns_alt_names = server.domain.local,server
 [main]
 certname = server.domain.local
 server = server.domain.local
-environment = develop
+environment = production
 EOF
 
 
@@ -81,8 +81,7 @@ echo "        DESPLEGANDO MODULOS      "
 echo "*********************************"
 sleep 2
 sudo r10k deploy environment -p
-sudo mkdir /etc/puppetlabs/code/environments/production
-cd /etc/puppetlabs/code/environments/develop
+cd /etc/puppetlabs/code/environments/production
 sudo r10k-resolve --force
 sudo g10k -moduledir modules -puppetfile -puppetfilelocation Puppetfile -force
 echo "Modulos desplegados..."
