@@ -28,7 +28,8 @@ sudo tee /etc/puppetlabs/puppet/puppet.conf <<EOF
 [main]
 certname = nodo01.domain.local
 server = server.domain.local
-environment = develop
+environment = production
+runinterval = 100y
 EOF
 
 echo "*********************************"
