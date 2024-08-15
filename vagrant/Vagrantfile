@@ -14,7 +14,7 @@ Vagrant.configure("2") do |config|
             vb.cpus = 2
         end
 
-        server.vm.provision "shell", path: "install_puppetserver.sh"
+        server.vm.provision "shell", path: "install_puppetserver.sh", run: "once"
     end
 
     config.vm.define "nodo01" do |nodo01|
@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
             vb.cpus = 2
         end
 
-        nodo01.vm.provision "shell", path: "install_puppetclient.sh"
+        nodo01.vm.provision "shell", path: "install_puppetclient.sh", run: "once"
     end
   end
   
