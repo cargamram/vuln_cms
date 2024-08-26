@@ -73,7 +73,7 @@ node 'nodo01.domain.local' {
   }->
   exec { 'rm_drupal':
     command       => 'rm -r /var/www/drupal &>/dev/null',
-  }
+  }->
   exec{ 'composer_create_project': 
     environment   => ['COMPOSER_HOME=/tmp'],
     command       => 'composer create-project drupal-composer/drupal-project:7.x-dev /var/www/drupal --no-interaction',
