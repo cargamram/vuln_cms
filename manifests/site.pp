@@ -71,10 +71,12 @@ node 'nodo01.domain.local' {
   exec{ 'composer_permission': 
     command      => 'chmod a+x /usr/local/bin/composer',
   }->
+  exec { 'rm_drupal':
+    command       => 'rm -r /var/www/drupal &>/dev/null',
+  }->
   exec{ 'composer_create_project': 
     environment   => ['COMPOSER_HOME=/tmp'],
     command       => 'composer create-project drupal-composer/drupal-project:7.x-dev /var/www/drupal --no-interaction',
-    onlyif        => 'test ! -d /var/www/drupal',
   }->
   exec{ 'install_drupal': 
     command      => "drush site-install  --root=/var/www/drupal/web --account-pass=adminpassword --db-url=mysql://${drupal_user}:${drupal_pass}@localhost/${drupal_db} --yes",
