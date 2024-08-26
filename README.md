@@ -40,7 +40,6 @@ El proyecto ha sido desarrollado utilizando las siguientes tecnologías:
 
 - **Herramientas:** Vagrant (VirtualBox), Puppet
 - **Lenguajes:** Puppet, Shell
-- **Bases de Datos:** MySQL
 - **CMS:** Drupal 7.x
 
 
