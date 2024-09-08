@@ -91,4 +91,6 @@ El proyecto ha sido desarrollado utilizando las siguientes tecnologías:
       - Usuario administrador: admin
       - Contraseña administrador: adminpassword
 
+**Si al apagar la máquina y volverla a levantar, aparece un mensaje de 403 Forbidden, se debe lanzar de nuevo el comando "sudo /opt/puppetlabs/bin/puppet agent --test" desde el nodo01
+
 
